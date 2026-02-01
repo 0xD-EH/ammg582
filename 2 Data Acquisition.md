@@ -1,0 +1,190 @@
+- **2.1 Introduction**
+	- Forensics Investigations start by "gathering data".
+	- What is **Acquisition**?
+		- **==Acquisition==** is making a forensic copy of evidence, which could be any type of media (HDD, USB, CD, etc.)
+	- An Investigator should *==**NEVER**==* conduct his **analysis** on the actual **physical machine**. <--- Important
+		- Instead, they should always take an **image**.
+		- That image would be a copy from everything on the machine's storage device.
+		- **==Data acquisition==** is the process of taking an image from a machine.
+	- Why do we acquire?
+		- Reasons for not working on the actual physical machine:
+			- **First**, you might damage the evidence while working.
+			- **Second**, the client may ask you to bring the device back for availability before you finish your investigation.
+			- Example: Breach on a company network server, you can't just take the whole server to investigate. Instead, you go to get an image.
+	- Volatility
+		- ==**Data volatility**== is defined as the rate or likeliness for a change on a data set.
+			- **A change could either be alteration or destruction.**
+			- Example: Data stored in RAM is more volatile than HDD; a restart would erase the data stored in RAM unlike the HDD.
+	- 2.1.1 Order of Volatility
+		- The investigator should always consider the **order of volatility** when acquiring data from a device.
+		- The Order:
+			- ==`Registers --> CPU Cache --> RAM --> HDD --> External and secondary storage devices (SSD)
+			- The values inside the **CPU's registers** changes with almost every assembly instructions.
+	- 2.1.2 Types of Data Acquisition
+		- Data Acquisition techniques and methods can be divided into:
+			- 1. **Static Acquisition**: is gathering **non volatile data.**
+			- 2. **Dynamic / Live Acquisition**: gathering **volatile data** usually while the device is still running.
+			- 3. **Dead Acquisition**: acquire data from machine without **OS assistance**. Usually done with the help of machine's hardware.
+				- The reason for Dead acquisition is that in many cases, **we can't trust the suspect's OS**.
+				- Some attackers install rootkits that manipulates OS's behavior.
+		- It is preferred to start with live data acquisition.
+		- Sometimes it is possible to come across **volatile data while conducting static data acquisition**, this could happen when finding a **Memory page** that has been paged before from the RAM over the HDD.
+- **2.2 Storage Formats**
+	- It is important to consider what is the storage format you are dealing with to use the right tools.
+	- **Raw Format**  %% DD tool %%
+		- is the **simplest format to save an image.**
+		- The data is read from the source device's disk and written on a file.
+		- It offers **fast transfer rate**, and it is popular on most forensic tools, which gives the investigator the flexibility of moving between different frameworks and compare their outputs.
+		- Raw format imaging tools **neglect small errors on the source disk** (considered either good or bad).
+		- It is **important to prepare enough storage** to save the image as it will take the same space of the target device driver's size.
+		- Some tools offer data splitting alongside imaging.
+		- One popular tool to image a disc in raw format is the ==***DD**==* tool, which is available for both Linux, by default, and Windows.
+		- **DD** allows you to image a disc in raw format and **split the file into multiple files** for ease of use.
+		- The general syntax for **DD** is simple
+			- ==`dd if=[src] of=[dst]`==
+		- The "**if**" parameter specifies the **source** drive and "**of**" specifies the **destination**.
+		- It is possible to use the **"-b"** options to split the image into multiple parts.
+			- ==`dd if=[src] | split -b 1000m`==
+			- This will result in splitting the image file into many **1 GB parts**
+	- **Proprietary Format**
+		- Many commercial tools for imaging implement their own file format.
+		- Proprietary tools also use **compression** for more space efficiency but make the imaging and the analysis process slower
+		- Advantages:
+			- Space efficiency
+			- All the case related metadata
+			- Data are on a single file (Case number, device name etc.)
+			- Usually gives the investigator the ability to do all their work on a **single framework** since most proprietary tools include imaging, analysis and reporting modules.
+		- Disadvantage:
+			- Slower due for the compression/decompression and encoding/decoding processes done.
+			- Binds the investigator to the framework they're using because  it is rarely cross platform
+		- Famous proprietary formats are
+			- Expert Witness Format (EWF) by EnCase
+			- IDIF, IRBF, IEIF by ILook Investigator
+			- sgzip by PyFlag
+	- **Advanced Forensics Format (AFF)**
+		- **AFF** is an open image format developed by Basis Technology.
+		- It gives flexibility since it **supported by many open source tools and frameworks.**
+		- AFF based tools copy the data from device in **16 MB blocks** (Usually called pages).
+	- Data acquisition vs Copy
+		- **==Imaging==** mirrors the device's entire storage on a file. (Not copying)
+		
+		- **==Copying==** mirrors only the **useful data** from source device.
+		
+		- Example:![[Pasted image 20260131140936.png]]
+- **2.3 Acquisition Methods**
+	- There are approaches:
+		- **Disk to Image file (Imaging)**: mirrors the suspect's disk content into an image file
+			- It created what called a **"forensic image"**
+			- The advantage of this method is **scalability and efficiency**.
+			- Forensic Image can be stored anywhere!
+			- ![[Pasted image 20260131141646.png]]
+		- **Disk to Disk (Cloning)**
+			- It created an exact similar to the source **"Clone"**
+			- ![[Pasted image 20260131141820.png]]
+			- Sparse Acquisition
+				- is when the investigator doesn't mirror all the disk content.
+				- Instead, you will selectively forensic copy a list of defined folders and files. Also, you could copy all the bytes residing withing the unallocated parts of the HDD.
+				- It is useful for cases where you can't take the suspect's system offline or if the device space is too huge to clone.
+- **2.4 Live Data Acquisition**
+	- It is used to collect data while the machine is ==**running**==
+	- Usually an investigator look for **volatile data** during live acquisition.
+	- Volatile data usually resides in **RAM and cache**.
+	- It just be lost due to reboot only; it is more susceptible to **modification or alteration.**
+	- This is because the process running on the machine uses RAM and cache continually.
+	- Any move made on machine will have an impact on the RAM.
+	- Volatile data is important. As **running processes** use RAM, it is very likely to find stored **passwords, messages, domain name and IP address** belonging to those processes.
+		- This could very important in cases such as Malware analysis and hunting.
+	- There might be volatile data stored on a non-volatile storage.
+		- Examples: **Temporary File** and **log files**.
+	- **==SYS Info==** 
+		- describes Basic system information about the machine, the running **OS**, its **configuration** and the installed **applications**.
+		- It includes things such as , the **OS version**, **build**, **product key**, computer name, accounts, **Manufacturer** and **specs** (CPU model, RAM size etc.)
+	- **RAM dump and running processes**
+		- It is important for the investigator to know what to look for when analyzing the RAM dumps he acquired.
+	- Most investigation's time is spent looking for and in **logs**, as getting those details could help the investigator in building timeline.
+		- **Time Stamps** also play a major role in crime reconstruction.
+		- **Timeline analysis:** investigator analyzes time stamps and try to find a **correlation** between the **events** in the logs and **times stamps**.
+	- **Network configurations** 
+		- Details such like number of **NICs** and their **modes**, **MAC and IP addresses**, could also help the investigator.
+	- **Memory Analysis**
+		- It isn't an easy task! but sometimes its the only options.
+		- Why?
+			- There are many cases where most methods of forensics investigation fails to extract the required evidence for the case.
+			- **Full Disk Encryption**, for example, is one case where **memory forensic is the way to handle**.
+				- There are many security solutions which allow a user to encrypt his hard disk content making normal disk imaging **useless**.
+				- In these cases, its the best option to **extract the key used for encryption** from **memory images**.
+			- We also may need memory forensics when tracing **malware**, especially **rootkits** and advanced persistent threats (**APT**).
+				-  Those types of malware tend to hide their presence by erasing themselves and making almost no contact with the hard disk.
+				- Malware do most of their work at **RAM** making it the best place to hunt for them.
+- **2.5 Tools**
+	- **2.5.1** **Write Blockers**
+		- **Write Blockers** are devices that allow the investigator to perform data acquisition while **eliminating the chance of damaging or altering the disk's content.** ![[Pasted image 20260131151511.png]]
+		- It works by blocking the hard disk from writing allowing safe data acquisition.
+		- This is done by filtering out the **"WRITE"** commands and preventing it from being executed.
+		- Common Write-blockers:
+			- ![[Pasted image 20260131151737.png]]
+	- **2.5.2 Bootable Disks**
+		- Bootable Disks usually holds a self-contained fully functioning, bootable OS.
+		- It allows us to launch an OS on the suspect's machine **without touching and modifying** the device's main disk.
+	- **2.5.3 Non-Writable USB**
+		- In many cases. the investigator will have an acquisition tool acquiring data and dumping it onto an external storage, typically a disk with a USB connection.
+			- The problem is that the disk contains the evidence might be **altered by Windows when connected to it; this would damage the evidence's integrity.**
+		- Solution is to take advantage of a **feature in the OS itself** (If write-blocker isn't an option) to **block it from writing on the USB devices.**
+		- It can be activated from the **registry** and it'll prevent the write access on the USB devices preserving the evidence integrity.
+			- Go to Start Menu, we type "Regedit"
+			- Access ==**`HKLM/SYSTEM/CurrentControlSet/Control`**
+			- Create a new key called ==`"StorageDevicePolicies"`==
+			- Inside the key we created, we need to create a value called ==`"WriteProtect"`== and double click on it, change the value from 0 to 1. ![[Pasted image 20260131153213.png]] ![[Pasted image 20260131153222.png]]
+	- **2.5.4 FTK Imager**
+		- **Forensic Toolkit Imager (FTK Imager)** is one of the most famous tools in the forensics world. It allows us to **acquire various types of storage devices** and store them in **different formats** for analysis.
+		
+		- FTK is commercial tool. However, the free version has many useful features that an investigator could benefit from.
+	- **2.5.5 Live Response Tools**
+		- BriMor Lab Tools:
+			- It can collect various and useful information from a machine.
+			- The tool offers many acquisition type.
+			- It also offers a "**secure**" option that allows us to protect the acquired data with a **password**.
+	- **2.5.6 Memory Forensic Tools**
+		- **Volatility Framework:**
+			- **Volatility Framework**: is a complete open collection of tools, implements in **Python** under the GNU General Public License for the **extraction of digital artifacts from volatile memory** (RAM) samples.
+			- When using volatility, we should first determine the **==OS==** that the image was taken from with the `"imageinfo"` flag.![[Pasted image 20260131155609.png]]
+			- Once we have the profile name, we should supply it with every command with the `--profile` flag.
+			- For example, if we want to extract the running processes from a Windows 7 service pack 0 x64 machine, the command would be:
+				- ==`volatility --profile=Win7SP0x64 pslist -f  img_mem.dmp`==
+	- **2.5.7 Other Forensic Tools**
+		- **Bulk Extractor**: 
+			- forensic tool that **scans** a disk image, file, or a directory and **extracts useful information** without parsing the file system.
+			- `bulk_extractor` also created a **histogram** of features that it finds.
+			- ![[Pasted image 20260131160233.png]]
+- **2.6 Validating Evidence**
+	- Validating evidence is usually performed through **Hash Function**.
+	- **Hash function**: **one way cryptographic** function which takes **variable-length input** and produces **fixed-size output** string.
+	- There are many hash functions in the industry today
+		- 1. SHA-1
+		- 2. SHA-2
+		- 3. SHA-3
+		- 4. Finally, the old MD-5
+	- SHA-1 and MD-5 aren't secure and suffer from **collisions** which makes the a less ideal option.
+	- We can calculate the SHA-512 (SHA-2 variant) hash value for a file using "**`sha512sum`**" command which is built-in by default in Kali Linux.
+	- Command
+		- **`"sha512sum hashtest.txt"`**
+	- Result:
+		- ![[Pasted image 20260131160914.png]]
+	- **Windows Evidence Validation:**
+		- Unlike Linux, **Windows doesn't have a built-in hashing tool**.
+		- Here we will use **`"Hashcalc"`**.
+- **2.7 Exploring Evidence**
+	- Some of the most commonly tools used are:
+		- FTK Imager
+		- Mount Image Pro
+		- OSFmount
+		- Arsenal Image Mounter
+		- P2 eXplorer Pro
+- 2.8 [^1]Miscellaneous
+	- Time
+		- One of the most critical aspects in DF is **time**!
+	- Timestamps:
+		- a **timestamp** is a sequence of characters or encoded information identifying when  a certain event occurred.
+ 
+
+[^1]: متنوع Miscellaneous 
